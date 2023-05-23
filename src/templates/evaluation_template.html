@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Evaluation {{ info.title }}</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js" integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.4.4/cjs/popper.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+        <style>
+            .title {
+                margin-top: 30px;
+            }
+            .card-header {
+                background-color: #f8f9fa;
+            }
+            /* Style the button that is used to open and close the collapsible content */
+            .collapsible {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 20px;
+            }
+
+            /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+            .active, .collapsible:hover {
+            background-color: #ccc;
+            }
+
+            /* Style the collapsible content. Note: hidden by default */
+            .content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.5s ease-out;
+            }
+
+            .collapsible:after {
+                content: '\02795'; /* Unicode character for "plus" sign (+) */
+                font-size: 13px;
+                color: white;
+                float: right;
+                margin-left: 5px;
+            }
+
+            .active:after {
+                content: "\2796"; /* Unicode character for "minus" sign (-) */
+            }
+
+            .all-collapsibles {
+                margin-top: 50px;
+                margin-bottom: 200px
+            }
+
+            .table-container {
+                max-height: 600px;
+                max-width: 100%;
+                overflow: auto;
+                display: block;
+                position: relative;
+                margin-bottom: 30px;
+            }
+
+            .table-container table thead th {
+                position: sticky;
+                top: 0;
+                background-color: #f8f9fa;
+                z-index: 10;
+            }
+
+            .table-container table tbody th {
+                position: sticky;
+                left: 0;
+                background-color: #f8f9fa;
+                z-index: 5;
+            }
+        </style>
+    </head>
+        <body class="container">
+            {% macro render_json(data) %}
+              {% if data is mapping %}
+                  <ul class="list-group">
+                    {% for key, value in data.items() %}
+                        <li class="list-group-item"><strong>{{ key }}:</strong> {{ render_json(value) }}</li>
+                    {% endfor %}
+                </ul>
+              {% elif data is iterable and data is not string %}
+                  <ul class="list-group">
+                      {% for item in data %}
+                          <li class="list-group-item">{{ render_json(item) }}</li>
+                      {% endfor %}
+                  </ul>
+              {% elif data is number %}
+                  {{ data|round(4) }}
+              {% else %}
+                  {{ data }}
+              {% endif %}
+            {% endmacro %}
+
+            <h1 class="title">Evaluation {{ info.title }}</h1>
+            <p>
+                Generated on {{ info.date }}
+                <br>
+                Number of datasets: {{ info.n_datasets }}
+                <br>
+                Dataset folder: {{ info.folder }}
+            </p>
+            <hr>
+            <div class="all-collapsibles">
+                <button type="button" class="collapsible">Dataset results</button>
+                    
+                <div class="content">
+                    <div class="container mt-5">
+                        <div class="row">
+                          <div class="col-md-12">
+                            <div class="table-container">
+                                <table class="table table-striped table-bordered">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Dataset</th>
+                                            <th>Generator id</th>
+                                            <th>Converter ids</th>
+                                            <th>Size</th>
+                                            <th>score</th>
+                                            <th>Path</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for dataset in datasets %}
+                                            <tr>
+                                                <td>{{ dataset.id }}</td>
+                                                <td>{{ dataset.generator }}</td>
+                                                <td> {{ dataset.converters }}</td>
+                                                <td>{{ dataset.size }}</td>
+                                                <td>{{ dataset.y|round(4) }}</td>
+                                                <td> {{ dataset.location }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    
+                                </table>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            <button type="button" class="collapsible">Short description generators</button>
+            <div class="content">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Class</th>
+                        <th>Kwargs</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for generator in generators %}
+                      <tr>
+                        <td>{{ generator.id }}</td>
+                        <td>{{ generator.class }}</td>
+                        <td>
+                            {{ render_json(generator.kwargs) }}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+            </div>
+
+            <button type="button" class="collapsible">Short description converters</button>
+            <div class="content">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Class</th>
+                        <th>Kwargs</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for converter in converters %}
+                      <tr>
+                        <td>{{ converter.id }}</td>
+                        <td>{{ converter.class }}</td>
+                        <td>
+                            {{ render_json(converter.kwargs) }}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+            </div>
+
+            <button type="button" class="collapsible">Datasets detailed metrics</button>
+            <div class="content">
+                <div class="container mt-5">
+                    <div class="row">
+                      <div class="col-md-12">
+                        <div class="table-container">
+                          <table class="table table-striped table-bordered table-hover">
+                            <thead class="thead-dark">
+                              <tr>
+                                <th scope="col">Dataset</th>
+                                {% for metric in metric_names %}
+                                    <th scope="col">{{ metric }}</th>
+                                {% endfor %}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for dataset in datasets %}
+                                <tr>
+                                  <th scope="row">{{ dataset.id }}</th>
+                                  {% for metric_key, metric_value in dataset.metrics.items()|sort(attribute='0') %}
+                                    {% if metric_value is not iterable %}
+                                        <td>{{ metric_value|round(4) }}</td>
+                                    {% endif %}
+                                  {% endfor %}
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+            </div>
+            
+
+              <button type="button" class="collapsible">Prompts Generators</button>
+              <div class="content">
+                {% for generator in generators %}
+                {% if generator.prompts|length > 0 %}
+                    <button type="button" class="collapsible">{{ generator.id }}</button>
+                    <div class="content">
+                        {{ render_json(generator.prompts) }}
+                    </div>
+                {% endif %}
+                {% endfor %}
+              </div>
+
+              <button type="button" class="collapsible">Prompts Converters</button>
+              <div class="content">
+                {% for converter in converters %}
+                {% if converter.prompts|length > 0 %}
+                    <button type="button" class="collapsible">{{ converter.id }}</button>
+                    <div class="content">
+                      {{ render_json(converter.prompts) }}
+                    </div>
+                {% endif %}
+                
+                {% endfor %}
+              </div>
+            </div>
+        </body>
+        <script>
+            $(window).on("load", function() {
+                var coll = document.getElementsByClassName("collapsible");
+                var i;
+
+                for (i = 0; i < coll.length; i++) {
+                coll[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    var content = this.nextElementSibling;
+                    if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    var parentContent = this.closest('.content');
+                    if (parentContent) {
+                        parentContent.style.maxHeight = parentContent.scrollHeight + "px";
+                    }
+                    } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    var parentContent = this.closest('.content');
+                    if (parentContent) {
+                        parentContent.style.maxHeight = parentContent.scrollHeight + content.scrollHeight + "px";
+                    }
+                    }
+                });
+                }
+                adjustTable();
+                $(window).resize(function() {
+                    adjustTable();
+                });
+
+                function adjustTable() {
+                    $('.table-container').css('max-width', $(window).width() * 0.9);
+                }
+            });
+
+        </script>
+</html>

@@ -1,0 +1,11 @@
+.env
+.ipynb_checkpoints/
+cache/
+.vector_cache/
+*.png
+__pycache__/
+**/nohup.out
+logs/
+temp/
+processed/
+plots/
